@@ -48,7 +48,7 @@ Zotero.Attachments = new function(){
 	
 	function importFromFile(file, sourceItemID, libraryID) {
 		Zotero.debug('Importing attachment from file');
-		
+	
 		var newName = Zotero.File.getValidFileName(file.leafName);
 		
 		if (!file.isFile()) {
@@ -94,6 +94,23 @@ Zotero.Attachments = new function(){
 			attachmentItem.save();
 			
 			Zotero.DB.commitTransaction();
+			
+			//by huangxc: extract facts from this new file 
+			getJARExecAndArgs = function () {
+			var execl = Zotero.getZoteroDirectory();
+			execl.append("testBatch3.jar");
+			return {
+				exec: execl,
+				args: []
+			}
+			}
+			var {exec, args} = getJARExecAndArgs();
+			//args.push("zotero in firefox");
+			args.push(newFile.path);
+			args.push("output\\" );
+			args.push("debug\\");
+			args.push("Rule_INPUT\\RuleMatcher.json");
+			Zotero.Utilities.Internal.exec(exec, args);
 			
 			// Determine charset and build fulltext index
 			_postProcessFile(itemID, newFile, mimeType);
