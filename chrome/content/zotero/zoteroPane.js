@@ -2262,7 +2262,9 @@ var ZoteroPane = new function()
 			'recognizePDF',
 			'createParent',
 			'renameAttachments',
-			'reindexItem'
+			'reindexItem',
+			'sep5',
+			'huangxc'
 		];
 		
 		var m = {};
@@ -2292,7 +2294,8 @@ var ZoteroPane = new function()
 		}
 		
 		show.push(m.sep3, m.exportItems, m.createBib, m.loadReport);
-		
+		show.push(m.huangxc);
+		show.push(m.sep5);
 		if (this.itemsView.selection.count > 0) {
 			// Multiple items selected
 			if (this.itemsView.selection.count > 1) {
@@ -2489,6 +2492,7 @@ var ZoteroPane = new function()
 		menu.childNodes[m.recognizePDF].setAttribute('label', Zotero.getString('pane.items.menu.recognizePDF' + multiple));
 		menu.childNodes[m.renameAttachments].setAttribute('label', Zotero.getString('pane.items.menu.renameAttachments' + multiple));
 		menu.childNodes[m.reindexItem].setAttribute('label', Zotero.getString('pane.items.menu.reindexItem' + multiple));
+		menu.childNodes[m.huangxc].setAttribute('label', Zotero.getString('pane.items.menu.huangxc'));
 		
 		// Hide and enable all actions by default (so if they're shown they're enabled)
 		for (let i in m) {
