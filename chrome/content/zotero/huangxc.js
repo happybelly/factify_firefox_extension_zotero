@@ -44,7 +44,13 @@ var Zotero_huangxc = new function() {
 		alert("huangxc");
 		var items = ZoteroPane_Local.getSelectedItems();
 		if (!items) return;
-		
+		this._items = [];
+		this._items = items.slice();
+		while(true) {
+		if(!this._items.length) return;
+		var item = this._items.shift();
+		var file = item.getFile();
+		alert("file is " + file.path);
 		getJARExecAndArgs = function () {
 			var execl = Zotero.getZoteroDirectory();
 //			execl.append("testJARForZotero.jar");
@@ -56,12 +62,12 @@ var Zotero_huangxc = new function() {
 		}
 		var {exec, args} = getJARExecAndArgs();
 		//args.push("zotero in firefox");
-		args.push("cbdgmlu_.pdf");
+		args.push(file.path);
 		args.push("output\\" );
 		args.push("debug\\");
 		args.push("Rule_INPUT\\RuleMatcher.json");
 		Zotero.Utilities.Internal.exec(exec, args);
-	
+		}
 		return true;
 	 	/*var installed = ZoteroPane_Local.checkPDFConverter();
 		if (!installed) {
