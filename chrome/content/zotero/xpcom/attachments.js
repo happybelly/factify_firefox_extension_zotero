@@ -98,7 +98,7 @@ Zotero.Attachments = new function(){
 			//by huangxc: extract facts from this new file 
 			getJARExecAndArgs = function () {
 			var execl = Zotero.getZoteroDirectory();
-			execl.append("testBatch3.jar");
+			execl.append("testBatch4.jar");
 			return {
 				exec: execl,
 				args: []
@@ -107,9 +107,16 @@ Zotero.Attachments = new function(){
 			var {exec, args} = getJARExecAndArgs();
 			//args.push("zotero in firefox");
 			args.push(newFile.path);
-			args.push("output\\" );
-			args.push("debug\\");
-			args.push("Rule_INPUT\\RuleMatcher.json");
+			var outputPath = Zotero.getZoteroDirectory().path + "\\output\\";
+			var debugPath = Zotero.getZoteroDirectory().path + "\\debug\\";
+			var ruleMatcherPath = Zotero.getZoteroDirectory().path + "\\Rule_INPUT\\RuleMatcher.json";
+			var debugLogPath = Zotero.getZoteroDirectory().path + "\\debug.txt";
+
+			args.push(outputPath);
+			args.push(debugPath);
+			args.push(ruleMatcherPath);
+			args.push(debugLogPath);
+		Zotero.debug("Extracting Facts: Running " + exec.path + " " + args.map(arg => "'" + arg + "'").join(" "));
 			Zotero.Utilities.Internal.exec(exec, args);
 			
 			// Determine charset and build fulltext index
