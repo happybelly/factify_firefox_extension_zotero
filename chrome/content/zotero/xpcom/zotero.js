@@ -38,6 +38,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 	this.stateCheck = stateCheck;
 	this.getProfileDirectory = getProfileDirectory;
 	this.getZoteroDirectory = getZoteroDirectory;
+	this.getZoteroFactsDirectory = getZoteroFactsDirectory;
 	this.getStorageDirectory = getStorageDirectory;
 	this.getZoteroDatabase = getZoteroDatabase;
 	this.chooseZoteroDirectory = chooseZoteroDirectory;
@@ -1037,7 +1038,13 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 		Zotero.File.createDirectoryIfMissing(file);
 		return file;
 	}
-	
+	function getZoteroFactsDirectory(){
+		var file = Zotero.getZoteroDirectory();
+		
+		file.append('facts_storage');
+		Zotero.File.createDirectoryIfMissing(file);
+		return file;
+	}
 	function getZoteroDatabase(name, ext){
 		name = name ? name + '.sqlite' : 'zotero.sqlite';
 		ext = ext ? '.' + ext : '';

@@ -37,24 +37,11 @@ var Zotero_huangxc = new function() {
 	this.canExtract = function(/**Zotero.Item*/ item) {
 		return (item.attachmentMIMEType &&
 			item.attachmentMIMEType == "application/pdf" && !item.getSource());
-	}
-	
-	
-	this.huangxcSelected = function() {
-		Zotero.debug("Entering fact extraction");
-		var items = ZoteroPane_Local.getSelectedItems();
-		if (!items) return;
-		this._items = [];
-		this._items = items.slice();
-		while(true) {
-		if(!this._items.length) return;
-		var item = this._items.shift();
-		var file = item.getFile();
-		Zotero.debug("Target file: " + file.path);
+	};
+	this.extractAndsend = function(file) {
 		getJARExecAndArgs = function () {
 			var execl = Zotero.getZoteroDirectory();
-//			execl.append("testJARForZotero.jar");
-			execl.append("testBatch4.jar");
+			execl.append("testBatch5.jar");
 		return {
 			exec: execl,
 			args: []
@@ -63,7 +50,7 @@ var Zotero_huangxc = new function() {
 		var {exec, args} = getJARExecAndArgs();
 		//args.push("zotero in firefox");
 		args.push(file.path);
-		var outputPath = Zotero.getZoteroDirectory().path + "\\output\\";
+		var outputPath = Zotero.getZoteroDirectory().path + "\\facts_storage\\";
 		var debugPath = Zotero.getZoteroDirectory().path + "\\debug\\";
 		var ruleMatcherPath = Zotero.getZoteroDirectory().path + "\\Rule_INPUT\\RuleMatcher.json";
 		var debugLogPath = Zotero.getZoteroDirectory().path + "\\debug.txt";
@@ -73,18 +60,65 @@ var Zotero_huangxc = new function() {
 		args.push(ruleMatcherPath);
 		args.push(debugLogPath);
 		Zotero.debug("Extracting Facts: Running " + exec.path + " " + args.map(arg => "'" + arg + "'").join(" "));
-
 		Zotero.Utilities.Internal.exec(exec, args);
-		}
-		return true;
-	 	/*var installed = ZoteroPane_Local.checkPDFConverter();
-		if (!installed) {
-			return;
-		}
-		
+		var filePath = file.path.replace(/^.*[\\\/]/, '') + "_facts.json";
+		var te = Zotero.getZoteroFactsDirectory();
+		//Zotero.debug("facts folder is " + te.path);
+		//Zotero.debug("facts file is " + filePath);
+		te.append(filePath);
+		Zotero.debug("sending file: " + te.path);
+		Components.utils.import("resource://gre/modules/NetUtil.jsm");
+		NetUtil.asyncFetch(te, function(inputStream, status) {
+			// The file data is contained within inputStream.
+			// You can read it into a string with
+			var data = NetUtil.readInputStreamToString(inputStream, inputStream.available());
+			if (!Components.isSuccessCode(status)) {
+				// Handle error!
+				Zotero.debug("error in asyncFetch " + status);
+				return;
+			}else {
+				//Zotero.debug("sucess: data is " + data);
+				var oReq = new XMLHttpRequest();
+				function reqListener () {
+					Zotero.debug("Response from server:" + this.responseText);
+				}
+				oReq.onreadystatechange = function (aEvt) {
+				if (oReq.readyState == 4) {
+					if(oReq.status == 200)
+						Zotero.debug(oReq.responseText);
+					else
+						Zotero.debug("Error loading page " + oReq.status);
+				}
+				//Zotero.debug("ready state change: readyState=" + oReq.readyState + " msg=" + oReq.responseText + " status=" + oReq.status);
+				};
+				//oReq.addEventListener("load", reqListener);
+				//oReq.onload = function (oEvent) {
+					//	Zotero.debug("Done loading %o, response is %o", oEvent, oReq.response);
+					//};
+				var content= data;
+				//Zotero.debug("sending data: \r\n" + content);
+				var dataBlob = new Blob([content], { type: "text/html" });
+				var formData = new FormData();
+				formData.append("data",dataBlob);
+				oReq.open("POST", "http://52.5.78.150:8080/upload?uri=" + filePath);
+				oReq.send(formData);
+			}
+		});
+	};
+	
+	this.huangxcSelected = function() {
+		Zotero.debug("Entering fact extraction");
 		var items = ZoteroPane_Local.getSelectedItems();
 		if (!items) return;
-		var itemRecognizer = new Zotero_RecognizePDF.ItemRecognizer();
-		itemRecognizer.recognizeItems(items); */
-	}	
-}
+		this._items = [];
+		this._items = items.slice();
+		while(true) {
+			if(!this._items.length) return;
+			var item = this._items.shift();
+			var file = item.getFile();
+			Zotero.debug("Target file: " + file.path);
+			this.extractAndsend(file);
+		}
+	};	
+};
+Zotero.huangxc = Zotero_huangxc;

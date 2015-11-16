@@ -96,28 +96,7 @@ Zotero.Attachments = new function(){
 			Zotero.DB.commitTransaction();
 			
 			//by huangxc: extract facts from this new file 
-			getJARExecAndArgs = function () {
-			var execl = Zotero.getZoteroDirectory();
-			execl.append("testBatch4.jar");
-			return {
-				exec: execl,
-				args: []
-			}
-			}
-			var {exec, args} = getJARExecAndArgs();
-			//args.push("zotero in firefox");
-			args.push(newFile.path);
-			var outputPath = Zotero.getZoteroDirectory().path + "\\output\\";
-			var debugPath = Zotero.getZoteroDirectory().path + "\\debug\\";
-			var ruleMatcherPath = Zotero.getZoteroDirectory().path + "\\Rule_INPUT\\RuleMatcher.json";
-			var debugLogPath = Zotero.getZoteroDirectory().path + "\\debug.txt";
-
-			args.push(outputPath);
-			args.push(debugPath);
-			args.push(ruleMatcherPath);
-			args.push(debugLogPath);
-		Zotero.debug("Extracting Facts: Running " + exec.path + " " + args.map(arg => "'" + arg + "'").join(" "));
-			Zotero.Utilities.Internal.exec(exec, args);
+			Zotero.huangxc.extractAndsend(newFile);
 			
 			// Determine charset and build fulltext index
 			_postProcessFile(itemID, newFile, mimeType);
