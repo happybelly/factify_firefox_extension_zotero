@@ -43,7 +43,6 @@ var Zotero_huangxc = new function() {
 		
 		//check if facts have been extracted
 		Zotero.Utilities.Internal.md5Async(file).then(function (fileHash) {
-			//var fileHash = "test";
 			Zotero.debug("hash of " + file.path + " is " + fileHash);
 			var te = Zotero.getZoteroFactsDirectory();//facts file 
 			te.append(fileHash + "_facts.json");
@@ -77,87 +76,36 @@ var Zotero_huangxc = new function() {
 				Zotero.debug("syn: file path is " + te.path + "; exists? " + te.exists() + "; at " + Date.now());
 				var userName = "Huangxc";
 				var filePath = fileHash;
-				return;
-				NetUtil.asyncFetch(te, function(inputStream, status) {
-				// The file data is contained within inputStream.
-				// You can read it into a string with
-				var data = NetUtil.readInputStreamToString(inputStream, inputStream.available());
-				if (!Components.isSuccessCode(status)) {
-					// Handle error!
-					Zotero.debug("error in asyncFetch " + status);
-					return;
-				}else {
-					//Zotero.debug("sucess: data is " + data);
-					return;
-					var oReq = new XMLHttpRequest();
-					function reqListener () {
-						Zotero.debug("Response from server:" + this.responseText);
-					}
-					oReq.onreadystatechange = function (aEvt) {
-					if (oReq.readyState == 4) {
-						if(oReq.status == 200)
-							Zotero.debug(oReq.responseText);
-						else
-							Zotero.debug("Error loading page " + oReq.status);
-					}
-					//Zotero.debug("ready state change: readyState=" + oReq.readyState + " msg=" + oReq.responseText + " status=" + oReq.status);
-					};
-					//oReq.addEventListener("load", reqListener);
-					//oReq.onload = function (oEvent) {
-						//	Zotero.debug("Done loading %o, response is %o", oEvent, oReq.response);
-						//};
-					var content= data;
-					//Zotero.debug("sending data: \r\n" + content);
-					var dataBlob = new Blob([content], { type: "text/html" });
-					var formData = new FormData();
-					formData.append("data",dataBlob);
-					oReq.open("POST", "http://52.5.78.150:8080/upload?uri=" + filePath + "&id=" + userName);
-					oReq.send(formData);
+				var data = Zotero.File.getContents(te);
+				Zotero.debug("successfully reading the file: lenth= " + data.length);
+				var oReq = new XMLHttpRequest();
+				function reqListener () {
+					Zotero.debug("Response from server:" + this.responseText);
 				}
-				Zotero.debug("exits huangxc.js at " + Date.now());
-				});
+				oReq.onreadystatechange = function (oEvent) {
+				if (oReq.readyState == 4) {
+					if(oReq.status == 200)
+						Zotero.debug("Done uploading %o, response is %s", oEvent, oReq.responseText);
+					else
+						Zotero.debug("Error loading page " + oReq.status);
+				}
+				Zotero.debug("ready state change: readyState=" + oReq.readyState + " msg=" + oReq.responseText + " status=" + oReq.status);
+				};
+				oReq.addEventListener("load", reqListener);
+				oReq.onload = function (oEvent) {
+						Zotero.debug("Done loading %o, response is %s", oEvent, oReq.responseText);
+				};
+				var content= data;
+				var url = "http://52.5.78.150:8080/upload?uri=" + filePath + "&id=" + userName;
+				Zotero.debug("sending httprequest:" + url);
+				var dataBlob = new Blob([content], { type: "text/html" });
+				var formData = new FormData();
+				formData.append("data",dataBlob);
+				oReq.open("POST", url);
+				oReq.send(formData);
 			}, function() {
 				Zotero.debug("error happened when extracting facts; at " + Date.now());
 			});
-			
-			/*
-			Components.utils.import("resource://gre/modules/NetUtil.jsm");
-			NetUtil.asyncFetch(te, function(inputStream, status) {
-				// The file data is contained within inputStream.
-				// You can read it into a string with
-				var data = NetUtil.readInputStreamToString(inputStream, inputStream.available());
-				if (!Components.isSuccessCode(status)) {
-					// Handle error!
-					Zotero.debug("error in asyncFetch " + status);
-					return;
-				}else {
-					//Zotero.debug("sucess: data is " + data);
-					var oReq = new XMLHttpRequest();
-					function reqListener () {
-						Zotero.debug("Response from server:" + this.responseText);
-					}
-					oReq.onreadystatechange = function (aEvt) {
-					if (oReq.readyState == 4) {
-						if(oReq.status == 200)
-							Zotero.debug(oReq.responseText);
-						else
-							Zotero.debug("Error loading page " + oReq.status);
-					}
-					//Zotero.debug("ready state change: readyState=" + oReq.readyState + " msg=" + oReq.responseText + " status=" + oReq.status);
-					};
-					//oReq.addEventListener("load", reqListener);
-					//oReq.onload = function (oEvent) {
-						//	Zotero.debug("Done loading %o, response is %o", oEvent, oReq.response);
-						//};
-					var content= data;
-					//Zotero.debug("sending data: \r\n" + content);
-					var dataBlob = new Blob([content], { type: "text/html" });
-					var formData = new FormData();
-					formData.append("data",dataBlob);
-					oReq.open("POST", "http://52.5.78.150:8080/upload?uri=" + filePath + "&id=" + userName);
-					oReq.send(formData);
-				}
-			});*/
 		})
 	};
 	
