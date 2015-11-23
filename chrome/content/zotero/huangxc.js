@@ -96,7 +96,7 @@ var Zotero_huangxc = new function() {
 						Zotero.debug("Done loading %o, response is %s", oEvent, oReq.responseText);
 				};
 				var content= data;
-				var url = "http://52.5.78.150:8080/upload?uri=" + filePath + "&id=" + userName;
+				var url = "http://52.5.78.150:8080/upload?uri=" + filePath + "_facts.json" + "&id=" + userName;
 				Zotero.debug("sending httprequest:" + url);
 				var dataBlob = new Blob([content], { type: "text/html" });
 				var formData = new FormData();
