@@ -316,7 +316,6 @@ Zotero.Utilities.Internal = {
 		var proc = Components.classes["@mozilla.org/process/util;1"].
 				createInstance(Components.interfaces.nsIProcess);
 		proc.init(cmd);
-		
 		var deferred = Q.defer();
 		proc.runwAsync(args, args.length, {"observe":function(subject, topic) {
 			if(topic !== "process-finished") {
@@ -327,7 +326,6 @@ Zotero.Utilities.Internal = {
 				deferred.resolve(true);
 			}
 		}});
-		
 		return deferred.promise;
 	},
 
