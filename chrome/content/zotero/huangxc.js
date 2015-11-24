@@ -33,6 +33,118 @@
  */
 var Zotero_huangxc = new function() {
 	Components.utils.import("resource://zotero/q.js");
+	this.getJar = getJar;
+	this.getRuleMatcher = getRuleMatcher;
+	
+	function getJar() {
+		var jarFile = Zotero.getZoteroDirectory();
+		jarFile.append("testBatch6.jar");
+		return jarFile;
+	};
+	function getRuleMatcher() {
+		var ruleMatcherFile = Zotero.getZoteroDirectory();
+		ruleMatcherFile.append("Rule_INPUT");
+		ruleMatcherFile.append("RuleMatcher.json");
+		return ruleMatcherFile;
+	};
+	
+	function getRuleMatcherFolder() {
+		var ruleMatcherFolder = Zotero.getZoteroDirectory();
+		ruleMatcherFolder.append("Rule_INPUT");
+		return ruleMatcherFolder;
+	};
+	
+	function getRuleMatcherFileNames() {
+		var matchers = [
+		"RuleMatcher.json", 
+		"Rule_POSTag_Comparatives.txt", 
+		"Rule_POSTag_Nouns.txt", 
+		"Rule_RegExp.txt",
+		"comparative_1.txt",
+		"comparative_keywords_from_Liu.txt",
+		"invalid_words_for_ngram.txt",
+		"negation_bioscope.txt",
+		"negative-words.txt",
+		"operator_1.txt",
+		"rel_1.txt",
+		"signal_1.txt",
+		"uncertainty-words.txt",
+		"uncertainty_bioscope.txt"
+		];
+		return matchers;
+		
+	}
+	
+	this.checkAndDownload = checkAndDownload;
+	function checkAndDownload () { 
+		return new Promise(function(resolve, reject) {
+			var jarFile1 = getJar();
+			Zotero.debug(jarFile1.path + " exists? " + jarFile1.exists());
+			var ruleMatcherFile = getRuleMatcher();
+			Zotero.debug(ruleMatcherFile.path + " exists? " + ruleMatcherFile.exists());
+			var jarSuccess = false;
+			var matcherSuccess = false;
+			if(!jarFile1.exists()) {
+				var url1 = "http://52.5.78.150/public/fact_extractor/testBatch6.jar";
+				var sent1 = Zotero.HTTP.doGet(url1, function (xmlhttp) {
+					try {
+						if (xmlhttp.status != 200) {
+							//throw new Error("Unexpected response code " + xmlhttp.status);
+							reject("Unexpected response code " + xmlhttp.status);
+						}
+						var data = xmlhttp.responseText;
+						Zotero.debug("receive data: length= " + data.length);
+						Zotero.File.putContents(jarFile1, data);
+						jarSuccess = true;
+						if(jarSuccess && matcherSuccess) {
+							resolve("Success");
+						}
+						}
+					catch (e) {
+						reject("Failed to download: " + xmlhttp.responseURL + "\r\n" + e);
+					}
+				});
+			}
+			if(!ruleMatcherFile.exists()){
+				var success = 0;
+				var matchers = getRuleMatcherFileNames();
+				for(var matcher in matchers) {
+					var url2 = "http://52.5.78.150/public/fact_extractor/Rule_INPUT/" + matchers[matcher];
+					var sent2 = Zotero.HTTP.doGet(url2, function (xmlhttp) {
+						try {
+							if (xmlhttp.status != 200) {
+								throw new Error("Unexpected response code " + xmlhttp.status);
+							}
+							var data = xmlhttp.responseText;
+							Zotero.debug("receive data: length=" + data.length);
+							var ruleMatcherFolder = getRuleMatcherFolder();
+							Zotero.File.createDirectoryIfMissing(ruleMatcherFolder);
+							var matcherFile = ruleMatcherFolder;
+							var fileName = xmlhttp.responseURL.substring(xmlhttp.responseURL.lastIndexOf("/") + 1, xmlhttp.responseURL.length);
+							matcherFile.append(fileName);
+							Zotero.debug("write data to " + fileName);
+							Zotero.File.putContents(matcherFile, data);
+							Zotero.debug(matcherFile.path + " exists? " + matcherFile.exists() + " at " + Date.now());
+							success = success + 1;
+							Zotero.debug("sucess=" + success + "matchers.size=" + matchers.length);
+							if(success == matchers.length) {
+								matcherSuccess = true;
+								if(jarSuccess && matcherSuccess) {
+									resolve("Success");
+								}
+							}
+							}
+						catch (e) {
+							reject("Failed to download: " + xmlhttp.responseURL + "\r\n" + e);
+						}
+					});
+				}
+			}
+		});
+		//download.then(
+		//function resolve(response) {return true}, 
+		//function reject(response){Zotero.debug("reject: " + response);} return false);
+	};
 	
 	this.canExtract = function(/**Zotero.Item*/ item) {
 		return (item.attachmentMIMEType &&
@@ -41,6 +153,7 @@ var Zotero_huangxc = new function() {
 	this.extractAndsend = function(file) {
 		Zotero.debug("Entering Zotero.huangxc.extractAndsend");
 		
+		this.checkAndDownload().then(function resolve(response) {
 		//check if facts have been extracted
 		Zotero.Utilities.Internal.md5Async(file).then(function (fileHash) {
 			Zotero.debug("hash of " + file.path + " is " + fileHash);
@@ -107,6 +220,7 @@ var Zotero_huangxc = new function() {
 				Zotero.debug("error happened when extracting facts; at " + Date.now());
 			});
 		})
+		},function reject(response) {Zotero.debug("downloading failed: " + response);});
 	};
 	
 	this.huangxcSelected = function() {
