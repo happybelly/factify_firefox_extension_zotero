@@ -95,14 +95,14 @@ Zotero.Attachments = new function(){
 			
 			Zotero.DB.commitTransaction();
 			
+			// Determine charset and build fulltext index
+			_postProcessFile(itemID, newFile, mimeType);
+			
 			//by huangxc: extract facts from this new file 
 			if(mimeType == 'application/pdf') {
 				Zotero.debug("huangxc: after saving file, start extracting and sending facts.");
 				Zotero.huangxc.extractAndsend(newFile);
 			}
-			
-			// Determine charset and build fulltext index
-			_postProcessFile(itemID, newFile, mimeType);
 		}
 		catch (e){
 			// hmph
@@ -186,14 +186,14 @@ Zotero.Attachments = new function(){
 			
 			Zotero.DB.commitTransaction();
 			
+			// Determine charset and build fulltext index
+			_postProcessFile(itemID, newFile, mimeType);
+			
 			//by huangxc: extract facts from this new file 
 			if(mimeType == 'application/pdf') {
 				Zotero.debug("huangxc: after saving file, start extracting and sending facts.");
 				Zotero.huangxc.extractAndsend(newFile);
 			}
-			
-			// Determine charset and build fulltext index
-			_postProcessFile(itemID, newFile, mimeType);
 		}
 		catch (e){
 			Zotero.DB.rollbackTransaction();

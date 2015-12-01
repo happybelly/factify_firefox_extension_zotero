@@ -1202,6 +1202,10 @@ Zotero.Sync.Runner.IdleListener = {
  * Methods for syncing with the Zotero Server
  */
 Zotero.Sync.Server = new function () {
+	
+	//by huangxc
+	this.login_seamless = login_seamless;
+	////
 	this.login = login;
 	this.sync = sync;
 	this.clear = clear;
@@ -1392,12 +1396,14 @@ Zotero.Sync.Server = new function () {
 		var url = _serverURL + "login";
 		
 		var username = Zotero.Sync.Server.username;
+		
 		if (!username) {
 			var e = new Zotero.Error(Zotero.getString('sync.error.usernameNotSet'), "SYNC_USERNAME_NOT_SET");
 			_error(e);
 		}
 		
 		var password = Zotero.Sync.Server.password;
+		Zotero.debug("Login(): username=" + username + "password=" + password);
 		if (!password) {
 			var e = new Zotero.Error(Zotero.getString('sync.error.passwordNotSet'), "INVALID_SYNC_LOGIN");
 			_error(e);
@@ -1480,6 +1486,69 @@ Zotero.Sync.Server = new function () {
 		});
 	}
 	
+	//by huangxc
+	//replica of login()
+	function login_seamless() {
+		Zotero.debug("Try to log in in login_seamless");
+		var url = _serverURL + "login";
+		
+		var username = Zotero.Sync.Server.username;
+		Zotero.debug("The input username is " + username);
+		if (!username) {
+			return new Promise(function(resolve) {resolve("Anonymous");});
+		}
+		
+		var password = Zotero.Sync.Server.password;
+		if (!password) {
+			return new Promise(function(resolve) {resolve("Anonymous");});
+		}
+		
+		username = encodeURIComponent(username);
+		password = encodeURIComponent(password);
+		var body = _apiVersionComponent
+					+ "&username=" + username
+					+ "&password=" + password;
+		
+		Zotero.Sync.Runner.setSyncStatus(Zotero.getString('sync.status.loggingIn'));
+		
+		return Zotero.HTTP.promise("POST", url,
+			{ body: body, successCodes: false, foreground: !Zotero.Sync.Runner.background })
+		.then(function (xmlhttp) {
+			_checkResponse(xmlhttp, true);
+			
+			var response = xmlhttp.responseXML.childNodes[0];
+			
+			if (response.firstChild.tagName == 'error') {
+				/*if (response.firstChild.getAttribute('code') == 'INVALID_LOGIN') {
+					var e = new Zotero.Error(Zotero.getString('sync.error.invalidLogin'), "INVALID_SYNC_LOGIN");
+					_error(e, false, true);
+				}
+				_error(response.firstChild.firstChild.nodeValue, false, true);*/
+				Zotero.debug("ERROR when login:" + response.firstChild.firstChild.nodeValue + " " + xmlhttp.responseXML);
+				return "Anonymous";
+			}
+			Zotero.debug("Login succeeded in login_seamless");
+			if (_sessionID) {
+				Zotero.debug("Session Id exists");
+				return this.username;
+				//_error("Session ID already set in Zotero.Sync.Server.login()", false, true)
+			}
+			
+			// <response><sessionID>[abcdefg0-9]{32}</sessionID></response>
+			_sessionID = response.firstChild.firstChild.nodeValue;
+			
+			var re = /^[abcdefg0-9]{32}$/;
+			if (!re.test(_sessionID)) {
+				_sessionID = null;
+				Zotero.debug("Invalid session ID received from server");
+				return this.username;
+				//_error('Invalid session ID received from server', false, true);
+			}
+			return this.username;
+			
+			//Zotero.debug('Got session ID ' + _sessionID + ' from server');
+		});
+	};
 	
 	function sync(callbacks, restart, upload) {
 		for (var func in callbacks) {
