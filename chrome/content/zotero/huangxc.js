@@ -269,8 +269,13 @@ var Zotero_huangxc = new function() {
 			checkFactsOwnership(file, te, userName, fileHash, getAndSendFactsData);
 		});
 	};
-	this.extractAndsend = function(file) {
+	this.extractAndsend = function(file, checkSetting) {
 		Zotero.debug("Entering Zotero.huangxc.extractAndsend");
+		if(checkSetting) {
+			var cb = document.getElementById("zotero-cb-extract-facts");
+			Zotero.debug("The user says no to fact extraction?" + cb.checked);
+			if(!cb.checked) return;
+		}
 		var sync_downloads = false;
 		var sync_username = false;
 		//find username
@@ -320,8 +325,7 @@ var Zotero_huangxc = new function() {
 			var item = this._items.shift();
 			var file = item.getFile();
 			Zotero.debug("Target file: " + file.path);
-			//this.extractFacts(file, "Huangxc");
-			this.extractAndsend(file);
+			this.extractAndsend(file, false);
 			
 		}
 	};	

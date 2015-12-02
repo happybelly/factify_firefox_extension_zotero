@@ -179,6 +179,10 @@
 						</menupopup>
 					</toolbarbutton>
 					<toolbarseparator/>
+					<hbox>
+					<checkbox id="zotero-cb-extract-facts" label="&zotero.huangxc.button;"/>
+					</hbox>	
+					<toolbarseparator/>
 					<toolbarbutton id="zotero-tb-advanced-search" class="zotero-tb-button" tooltiptext="&zotero.toolbar.advancedSearch;" command="cmd_zotero_advancedSearch"/>
 					<spacer flex="1"/>
 					<textbox id="zotero-tb-search" type="search" timeout="250"

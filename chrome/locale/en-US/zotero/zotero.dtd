@@ -227,6 +227,8 @@
 
 <!ENTITY zotero.integration.references.label			"References in Bibliography">
 
+<!ENTITY zotero.huangxc.button							"Turn on Fact Extractor ">
+
 <!ENTITY zotero.sync.button							"Sync with Zotero Server">
 <!ENTITY zotero.sync.error							"Sync Error">
 <!ENTITY zotero.sync.storage.progress				"Progress:">
