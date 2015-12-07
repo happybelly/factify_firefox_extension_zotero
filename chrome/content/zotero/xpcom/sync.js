@@ -1530,7 +1530,7 @@ Zotero.Sync.Server = new function () {
 			Zotero.debug("Login succeeded in login_seamless");
 			if (_sessionID) {
 				Zotero.debug("Session Id exists");
-				return this.username;
+				//return username;
 				//_error("Session ID already set in Zotero.Sync.Server.login()", false, true)
 			}
 			
@@ -1541,10 +1541,10 @@ Zotero.Sync.Server = new function () {
 			if (!re.test(_sessionID)) {
 				_sessionID = null;
 				Zotero.debug("Invalid session ID received from server");
-				return this.username;
+				return username;
 				//_error('Invalid session ID received from server', false, true);
 			}
-			return this.username;
+			return username;
 			
 			//Zotero.debug('Got session ID ' + _sessionID + ' from server');
 		});
