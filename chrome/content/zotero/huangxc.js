@@ -38,7 +38,7 @@ var Zotero_huangxc = new function() {
 	
 	function getJar() {
 		var jarFile = Zotero.getZoteroDirectory();
-		jarFile.append("testBatch6.jar");
+		jarFile.append("factExtractor.jar");
 		return jarFile;
 	};
 	function getRuleMatcher() {
@@ -94,7 +94,7 @@ var Zotero_huangxc = new function() {
 				resolve("Success");
 			}
 			if(!jarFile1.exists()) {
-				var url1 = "http://52.5.78.150/public/fact_extractor/testBatch6.jar";
+				var url1 = "http://52.5.78.150/public/fact_extractor/factExtractor.jar";
 				Zotero.debug("send request for jar at " + Date.now());
 				var sent1 = Zotero.HTTP.doGet(url1, function (xmlhttp) {
 					try {
@@ -233,8 +233,7 @@ var Zotero_huangxc = new function() {
 				sendFactsData(facts_file, uri, id);
 			}else {
 				getJARExecAndArgs = function () {
-				var execl = Zotero.getZoteroDirectory();
-				execl.append("testBatch6.jar");
+				var execl = getJar();
 				return {
 					exec: execl,
 					args: []
@@ -245,7 +244,7 @@ var Zotero_huangxc = new function() {
 				var outputPath = Zotero.getZoteroFactsDirectory().path + "\\";
 				var debugPath = Zotero.getZoteroDirectory().path + "\\debug\\";
 				var ruleMatcherPath = Zotero.getZoteroDirectory().path + "\\Rule_INPUT\\RuleMatcher.json";
-				var debugLogPath = Zotero.getZoteroDirectory().path + "\\debug.txt";
+				var debugLogPath = " ";
 				args.push(outputPath);
 				args.push(debugPath);
 				args.push(ruleMatcherPath);
