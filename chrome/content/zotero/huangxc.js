@@ -96,24 +96,56 @@ var Zotero_huangxc = new function() {
 			if(!jarFile1.exists()) {
 				var url1 = "http://52.5.78.150/public/fact_extractor/factExtractor.jar";
 				Zotero.debug("send request for jar at " + Date.now());
-				var sent1 = Zotero.HTTP.doGet(url1, function (xmlhttp) {
-					try {
-						if (xmlhttp.status != 200) {
-							//throw new Error("Unexpected response code " + xmlhttp.status);
-							reject("Unexpected response code " + xmlhttp.status);
-						}
-						var data = xmlhttp.responseText;
-						Zotero.debug("receive data: length= " + data.length + " at " + Date.now());
-						Zotero.File.putContents(jarFile1, data);
-						sync_jarSuccess = true;
-						if(sync_jarSuccess && sync_matcherSuccess) {
-							resolve("Success");
-						}
-						}
-					catch (e) {
-						reject("Failed to download: " + xmlhttp.responseURL + "\r\n" + e);
-					}
-				});
+				function fileWrite(file, data, callback) {
+				    Cu.import("resource://gre/modules/FileUtils.jsm");
+				    Cu.import("resource://gre/modules/NetUtil.jsm");
+				    let nsFile = Components.Constructor("@mozilla.org/file/local;1", Ci.nsILocalFile, "initWithPath");
+				    if (typeof file == 'string') file = new nsFile(file);
+				    let ostream = FileUtils.openSafeFileOutputStream(file)
+				
+				    let istream = Cc["@mozilla.org/io/arraybuffer-input-stream;1"].createInstance(Ci.nsIArrayBufferInputStream);
+				    istream.setData(data, 0, data.byteLength);
+				
+				    let bstream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
+				    bstream.setInputStream(istream);
+				
+				    NetUtil.asyncCopy(bstream, ostream,
+				      function(status) {
+							if (callback) callback(Components.isSuccessCode(status));
+							Zotero.debug("Receiveing jar at " + Date.now());
+							if(Components.isSuccessCode(status)) {
+								sync_jarSuccess = true;
+								if(sync_jarSuccess && sync_matcherSuccess) {
+									resolve("Success");
+									return;
+								}
+							}else {
+								sync_jarSuccess = false;
+								reject("Failed to write: " + file.path + "\r\n" + e);
+								return;
+							}
+				      }
+				    );
+				}
+				function getBinFile(url, dir) {
+				  let nsFile = Components.Constructor("@mozilla.org/file/local;1", Ci.nsILocalFile, "initWithPath");
+				  let oReq = new XMLHttpRequest();
+				  oReq.open("GET", url, true);
+				  oReq.responseType = "arraybuffer";
+				  oReq.onload = function(oEvent) {
+				    var arrayBuffer = oReq.response;
+				    if (arrayBuffer) {
+				        //let byteArray = new Uint8Array(arrayBuffer);
+				        let byteArray = arrayBuffer;
+				        dir = /\\$/.test(dir) ? dir: dir + '\\';
+				        let file = nsFile(dir + decodeURIComponent(url.split('/').pop()));
+				        fileWrite(file, byteArray);
+				    }
+				  };
+  				oReq.send(null);
+				}
+				getBinFile( url1, Zotero.getZoteroDirectory().path+"\\");
+				
 			}
 			if(!ruleMatcherFile.exists()){
 				var success = 0;
@@ -124,6 +156,7 @@ var Zotero_huangxc = new function() {
 						try {
 							if (xmlhttp.status != 200) {
 								throw new Error("Unexpected response code " + xmlhttp.status);
+								return;
 							}
 							var data = xmlhttp.responseText;
 							Zotero.debug("receive data: length=" + data.length);
@@ -141,11 +174,13 @@ var Zotero_huangxc = new function() {
 								sync_matcherSuccess = true;
 								if(sync_jarSuccess && sync_matcherSuccess) {
 									resolve("Success");
+									return;
 								}
 							}
 							}
 						catch (e) {
 							reject("Failed to download: " + xmlhttp.responseURL + "\r\n" + e);
+							return;
 						}
 					});
 				}
@@ -253,8 +288,16 @@ var Zotero_huangxc = new function() {
 				Zotero.debug("Extracting Facts: Running " + exec.path + " " + args.map(arg => "'" + arg + "'").join(" ") + "; at "+ Date.now());
 				Zotero.Utilities.Internal.exec(exec, args).then(function() {
 					sendFactsData(facts_file, uri, id);
-				}, function() {
-					Zotero.debug("error happened when extracting facts; at " + Date.now());
+				}, function(msg) {
+					var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+										.getService(Components.interfaces.nsIPromptService);
+					ps.alert(
+					null,
+					" ",
+					"An error occurred when extracting facts!\n\n"
+						+ msg
+					);
+					Zotero.debug("error happened when extracting facts; at " + Date.now() + " errorMsg: " + msg);
 				});
 			}
 		}
@@ -298,7 +341,7 @@ var Zotero_huangxc = new function() {
 			sync_downloads = true;
 			Zotero.debug("after checkAndDownload(): sync_username=" + sync_username + "; sync_downloads=" + sync_downloads);
 			if(sync_username) {
-				Zotero.debug("ready in here");
+				Zotero.debug("Ready to extract Facts");
 				extractFacts(file, userName);
 			}
 			}
@@ -308,9 +351,16 @@ var Zotero_huangxc = new function() {
 		}
 		},function reject(response) {
 			Zotero.debug("downloading failed: " + response);
+			var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+										.getService(Components.interfaces.nsIPromptService);
+					ps.alert(
+					null,
+					" ",
+					"Failed to download necessary factExtractor files. \n\n"
+						+ response
+				);
 			sync_downloads = false;
 		});
-		
 	};
 	
 	this.huangxcSelected = function() {
