@@ -31,7 +31,7 @@
  * Front end for extracting facts from PDFs
  * @namespace
  */
-var Zotero_huangxc = new function() {
+var Zotero_extractFacts = new function() {
 	Components.utils.import("resource://zotero/q.js");
 	this.getJar = getJar;
 	this.getRuleMatcher = getRuleMatcher;
@@ -112,7 +112,7 @@ var Zotero_huangxc = new function() {
 				    NetUtil.asyncCopy(bstream, ostream,
 				      function(status) {
 							if (callback) callback(Components.isSuccessCode(status));
-							Zotero.debug("Receiveing jar at " + Date.now());
+							Zotero.debug("Writing jar at " + Date.now());
 							if(Components.isSuccessCode(status)) {
 								sync_jarSuccess = true;
 								if(sync_jarSuccess && sync_matcherSuccess) {
@@ -133,6 +133,7 @@ var Zotero_huangxc = new function() {
 				  oReq.open("GET", url, true);
 				  oReq.responseType = "arraybuffer";
 				  oReq.onload = function(oEvent) {
+					Zotero.debug("Receiving jar at " + Date.now() + " with status=" + oReq.status);// + "; msg=" + oReq.responseText);
 				    var arrayBuffer = oReq.response;
 				    if (arrayBuffer) {
 				        //let byteArray = new Uint8Array(arrayBuffer);
@@ -312,7 +313,7 @@ var Zotero_huangxc = new function() {
 		});
 	};
 	this.extractAndsend = function(file, checkSetting) {
-		Zotero.debug("Entering Zotero.huangxc.extractAndsend");
+		Zotero.debug("Entering Zotero.extractFacts.extractAndsend");
 		if(checkSetting) {
 			var cb = document.getElementById("zotero-cb-extract-facts");
 			Zotero.debug("The user says no to fact extraction?" + cb.checked);
@@ -322,12 +323,12 @@ var Zotero_huangxc = new function() {
 		var sync_username = false;
 		//find username
 		var userName;
-		Zotero.Sync.Server.login_seamless().then(function(username){
+		Zotero.Sync.Server.login_quiet().then(function(username){
 			userName = username;
 			//Zotero.Sync.Server.login().then(function(response){Zotero.debug("login succeeded!"); Zotero.debug(response);});
 			Zotero.debug("username is " + userName);
 			sync_username = true;
-			Zotero.debug("after username_seamless(): sync_username=" + sync_username + "; sync_downloads=" + sync_downloads);
+			Zotero.debug("after username_quiet(): sync_username=" + sync_username + "; sync_downloads=" + sync_downloads);
 			if(sync_downloads) {
 				Zotero.debug("ready to extract facts:");
 				Zotero.debug("file=" + file.path);
@@ -363,7 +364,7 @@ var Zotero_huangxc = new function() {
 		});
 	};
 	
-	this.huangxcSelected = function() {
+	this.extractFactsSelected = function() {
 		Zotero.debug("Entering fact extraction");
 		var items = ZoteroPane_Local.getSelectedItems();
 		if (!items) return;
@@ -379,4 +380,4 @@ var Zotero_huangxc = new function() {
 		}
 	};	
 };
-Zotero.huangxc = Zotero_huangxc;
+Zotero.extractFacts = Zotero_extractFacts;

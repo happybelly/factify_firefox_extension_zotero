@@ -100,8 +100,8 @@ Zotero.Attachments = new function(){
 			
 			//by huangxc: extract facts from this new file 
 			if(mimeType == 'application/pdf') {
-				Zotero.debug("huangxc: after saving file, start extracting and sending facts.");
-				Zotero.huangxc.extractAndsend(newFile, true);
+				Zotero.debug("extractFacts: after saving file, start extracting and sending facts.");
+				Zotero.extractFacts.extractAndsend(newFile, true);
 			}
 		}
 		catch (e){
@@ -191,8 +191,8 @@ Zotero.Attachments = new function(){
 			
 			//by huangxc: extract facts from this new file 
 			if(mimeType == 'application/pdf') {
-				Zotero.debug("huangxc: after saving file, start extracting and sending facts.");
-				Zotero.huangxc.extractAndsend(newFile, true);
+				Zotero.debug("extractFacts: after saving file, start extracting and sending facts.");
+				Zotero.extractFacts.extractAndsend(newFile, true);
 			}
 		}
 		catch (e){
@@ -361,8 +361,8 @@ Zotero.Attachments = new function(){
 				}
 				
 				if(mimeType == 'application/pdf') {
-					Zotero.debug("huangxc: after saving file, start extracting and sending facts.");
-					Zotero.huangxc.extractAndsend(file, true);
+					Zotero.debug("extractFacts: after saving file, start extracting and sending facts.");
+					Zotero.extractFacts.extractAndsend(file, true);
 				}
 				var nsIURL = Components.classes["@mozilla.org/network/standard-url;1"]
 							.createInstance(Components.interfaces.nsIURL);
@@ -701,8 +701,8 @@ Zotero.Attachments = new function(){
 			
 			//by huangxc: extract facts from this new file 
 			if(mimeType == 'application/pdf') {
-				Zotero.debug("huangxc: after saving file, start extracting and sending facts.");
-				Zotero.huangxc.extractAndsend(file, true);
+				Zotero.debug("extractFacts: after saving file, start extracting and sending facts.");
+				Zotero.extractFacts.extractAndsend(file, true);
 			}
 			
 			if (disabled) {

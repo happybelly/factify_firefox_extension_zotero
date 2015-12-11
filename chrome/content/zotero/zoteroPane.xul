@@ -46,7 +46,8 @@
 	<script src="browser.js" type="application/javascript;version=1.8"/>
 	<script src="lookup.js"/>
 	<script src="locateMenu.js" type="application/javascript;version=1.8"/>
-	<script src="huangxc.js"/>
+	<script src="https://java.com/js/deployJava.js" type="text/javascript"></script>
+	<script src="extractFacts.js"/>
 	
 	<commandset id="mainCommandSet">
 		<command id="cmd_zotero_reportErrors" oncommand="ZoteroPane_Local.reportErrors();"/>
@@ -180,7 +181,7 @@
 					</toolbarbutton>
 					<toolbarseparator/>
 					<hbox>
-					<checkbox id="zotero-cb-extract-facts" label="&zotero.huangxc.button;"/>
+					<checkbox id="zotero-cb-extract-facts" label="&zotero.extractFacts.button;" checked="true" />
 					</hbox>	
 					<toolbarseparator/>
 					<toolbarbutton id="zotero-tb-advanced-search" class="zotero-tb-button" tooltiptext="&zotero.toolbar.advancedSearch;" command="cmd_zotero_advancedSearch"/>
@@ -292,7 +293,7 @@
 					<menuitem class="menuitem-iconic zotero-menuitem-rename-from-parent" oncommand="ZoteroPane_Local.renameSelectedAttachmentsFromParents()"/>
 					<menuitem class="menuitem-iconic zotero-menuitem-reindex" oncommand="ZoteroPane_Local.reindexItem();"/>
 					<menuseparator/>
-					<menuitem class="menuitem-iconic zotero-menuitem-huangxc" oncommand="Zotero_huangxc.huangxcSelected();"/>
+					<menuitem class="menuitem-iconic zotero-menuitem-extractFacts" oncommand="Zotero_extractFacts.extractFactsSelected();"/>
  	
 				</menupopup>
 			</popupset>

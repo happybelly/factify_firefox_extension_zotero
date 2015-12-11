@@ -1204,7 +1204,7 @@ Zotero.Sync.Runner.IdleListener = {
 Zotero.Sync.Server = new function () {
 	
 	//by huangxc
-	this.login_seamless = login_seamless;
+	this.login_quiet = login_quiet;
 	////
 	this.login = login;
 	this.sync = sync;
@@ -1488,8 +1488,8 @@ Zotero.Sync.Server = new function () {
 	
 	//by huangxc
 	//replica of login()
-	function login_seamless() {
-		Zotero.debug("Try to log in in login_seamless");
+	function login_quiet() {
+		Zotero.debug("Try to log in in login_quiet");
 		var url = _serverURL + "login";
 		
 		var username = Zotero.Sync.Server.username;
@@ -1527,7 +1527,7 @@ Zotero.Sync.Server = new function () {
 				Zotero.debug("ERROR when login:" + response.firstChild.firstChild.nodeValue + " " + xmlhttp.responseXML);
 				return "Anonymous";
 			}
-			Zotero.debug("Login succeeded in login_seamless");
+			Zotero.debug("Login succeeded in login_quiet");
 			if (_sessionID) {
 				Zotero.debug("Session Id exists");
 				//return username;
