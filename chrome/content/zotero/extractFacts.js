@@ -370,13 +370,35 @@ var Zotero_extractFacts = new function() {
 		if (!items) return;
 		this._items = [];
 		this._items = items.slice();
+		var nonpdfs = 0;
+		var total = 0;
 		while(true) {
-			if(!this._items.length) return;
+			if(!this._items.length) break;
 			var item = this._items.shift();
-			var file = item.getFile();
-			Zotero.debug("Target file: " + file.path);
-			this.extractAndsend(file, false);
-			
+			total = total + 1;
+			if(this.canExtract(item)) {
+				var file = item.getFile();
+				Zotero.debug("Target file: " + file.path);
+				this.extractAndsend(file, false);
+			}else {
+				nonpdfs = nonpdfs + 1;
+				Zotero.debug("A non-pdf is selected to extract facts.");
+			}
+		}
+		var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+										.getService(Components.interfaces.nsIPromptService);
+		if(nonpdfs != 0 && nonpdfs == total) {	
+			ps.alert(
+			null,
+			" ",
+			"None of the selected files are PDF files. No facts are extracted!"
+			);
+		}else {
+			ps.alert(
+			null,
+			" ",
+			"Facts of " + (total - nonpdfs) + " PDF files are being extracted in background."
+			);
 		}
 	};	
 };

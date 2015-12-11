@@ -2492,7 +2492,7 @@ var ZoteroPane = new function()
 		menu.childNodes[m.recognizePDF].setAttribute('label', Zotero.getString('pane.items.menu.recognizePDF' + multiple));
 		menu.childNodes[m.renameAttachments].setAttribute('label', Zotero.getString('pane.items.menu.renameAttachments' + multiple));
 		menu.childNodes[m.reindexItem].setAttribute('label', Zotero.getString('pane.items.menu.reindexItem' + multiple));
-		menu.childNodes[m.extractFacts].setAttribute('label', Zotero.getString('pane.items.menu.extractFacts'));
+		menu.childNodes[m.extractFacts].setAttribute('label', Zotero.getString('pane.items.menu.extractFacts' + multiple));
 		
 		// Hide and enable all actions by default (so if they're shown they're enabled)
 		for (let i in m) {
