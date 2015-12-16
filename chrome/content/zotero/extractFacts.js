@@ -75,59 +75,81 @@ var Zotero_extractFacts = new function() {
 		
 	}
 	
-	this.checkAndDownload = checkAndDownload;
-	function checkAndDownload () { 
-		return new Promise(function(resolve, reject) {
-			var jarFile1 = getJar();
-			Zotero.debug(jarFile1.path + " exists? " + jarFile1.exists());
-			var ruleMatcherFile = getRuleMatcher();
-			Zotero.debug(ruleMatcherFile.path + " exists? " + ruleMatcherFile.exists());
-			var sync_jarSuccess = false;
-			var sync_matcherSuccess = false;
-			if(jarFile1.exists()) {
-				sync_jarSuccess = true;
-			}
-			if(ruleMatcherFile.exists()) {
-				sync_matcherSuccess = true;
-			}
-			if(sync_jarSuccess && sync_matcherSuccess) {
-				resolve("Success");
-			}
-			if(!jarFile1.exists()) {
-				var url1 = "http://52.5.78.150/public/fact_extractor/factExtractor.jar";
-				Zotero.debug("send request for jar at " + Date.now());
-				function fileWrite(file, data, callback) {
-				    Cu.import("resource://gre/modules/FileUtils.jsm");
-				    Cu.import("resource://gre/modules/NetUtil.jsm");
-				    let nsFile = Components.Constructor("@mozilla.org/file/local;1", Ci.nsILocalFile, "initWithPath");
-				    if (typeof file == 'string') file = new nsFile(file);
-				    let ostream = FileUtils.openSafeFileOutputStream(file)
-				
-				    let istream = Cc["@mozilla.org/io/arraybuffer-input-stream;1"].createInstance(Ci.nsIArrayBufferInputStream);
-				    istream.setData(data, 0, data.byteLength);
-				
-				    let bstream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
-				    bstream.setInputStream(istream);
-				
-				    NetUtil.asyncCopy(bstream, ostream,
-				      function(status) {
-							if (callback) callback(Components.isSuccessCode(status));
-							Zotero.debug("Writing jar at " + Date.now());
-							if(Components.isSuccessCode(status)) {
-								sync_jarSuccess = true;
-								if(sync_jarSuccess && sync_matcherSuccess) {
-									resolve("Success");
-									return;
-								}
-							}else {
-								sync_jarSuccess = false;
-								reject("Failed to write: " + file.path + "\r\n" + e);
-								return;
-							}
-				      }
-				    );
+	function estimateSpaceRequirement (whichFiles) {
+		return new Promise(function (resolve, reject) {
+			var url = "http://52.5.78.150:8080/getSize?whichFiles=" + whichFiles;
+			var oReq = new XMLHttpRequest();
+			function reqListener () {
+					Zotero.debug("In estimateSpaceRequirement, Response from server:" + this.responseText);
 				}
-				function getBinFile(url, dir) {
+				oReq.onreadystatechange = function (oEvent) {
+				if (oReq.readyState == 4) {
+					if(oReq.status == 200) {
+						Zotero.debug("In estimateSpaceRequirement,Done uploading %o, response is %s", oEvent, oReq.responseText);
+						resolve(oReq.responseText);
+						return;
+					}
+					else{
+						Zotero.debug("In estimateSpaceRequirement,Error loading page " + oReq.status);
+						reject("Failed to reterive file size");
+						return;
+					}
+				}
+				Zotero.debug("In estimateSpaceRequirement,ready state change: readyState=" + oReq.readyState + " msg=" + oReq.responseText + " status=" + oReq.status);
+				};
+				oReq.addEventListener("load", reqListener);
+				oReq.onload = function (oEvent) {
+						Zotero.debug("In estimateSpaceRequirement, Done loading %o, response is %s", oEvent, oReq.responseText);
+				};
+				Zotero.debug("sending httprequest:" + url);
+				oReq.open("GET", url);
+				oReq.send();
+			});
+	}
+	
+	this.checkAndDownload = checkAndDownload;
+	function checkAndDownload (askIfToDownload) { 
+	
+		var jarFile1 = getJar();
+		Zotero.debug(jarFile1.path + " exists? " + jarFile1.exists());
+		var ruleMatcherFile = getRuleMatcher();
+		Zotero.debug(ruleMatcherFile.path + " exists? " + ruleMatcherFile.exists());
+		var sync_jarSuccess = false;
+		var sync_matcherSuccess = false;
+		function downloadJar() {
+			return new Promise(function (resolve, reject){
+			var url1 = "http://52.5.78.150/public/fact_extractor/factExtractor.jar";
+			Zotero.debug("send request for jar at " + Date.now());
+			function fileWrite(file, data, callback) {
+			    Cu.import("resource://gre/modules/FileUtils.jsm");
+			    Cu.import("resource://gre/modules/NetUtil.jsm");
+			    let nsFile = Components.Constructor("@mozilla.org/file/local;1", Ci.nsILocalFile, "initWithPath");
+			    if (typeof file == 'string') file = new nsFile(file);
+			    let ostream = FileUtils.openSafeFileOutputStream(file)
+			
+			    let istream = Cc["@mozilla.org/io/arraybuffer-input-stream;1"].createInstance(Ci.nsIArrayBufferInputStream);
+			    istream.setData(data, 0, data.byteLength);
+			
+			    let bstream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
+			    bstream.setInputStream(istream);
+			
+			    NetUtil.asyncCopy(bstream, ostream,
+			      function(status) {
+						if (callback) callback(Components.isSuccessCode(status));
+						Zotero.debug("Writing jar at " + Date.now());
+						if(Components.isSuccessCode(status)) {
+							sync_jarSuccess = true;
+							resolve("Success");
+							return;
+						}else {
+							sync_jarSuccess = false;
+							reject("Failed to write: " + file.path + "\r\n" + e);
+							return;
+						}
+			      }
+			    );
+				}
+			function getBinFile(url, dir) {
 				  let nsFile = Components.Constructor("@mozilla.org/file/local;1", Ci.nsILocalFile, "initWithPath");
 				  let oReq = new XMLHttpRequest();
 				  oReq.open("GET", url, true);
@@ -143,56 +165,122 @@ var Zotero_extractFacts = new function() {
 				        fileWrite(file, byteArray);
 				    }
 				  };
-  				oReq.send(null);
+	 				oReq.send(null);
 				}
-				getBinFile( url1, Zotero.getZoteroDirectory().path+"\\");
-				
-			}
-			if(!ruleMatcherFile.exists()){
-				var success = 0;
-				var matchers = getRuleMatcherFileNames();
-				for(var matcher in matchers) {
-					var url2 = "http://52.5.78.150/public/fact_extractor/Rule_INPUT/" + matchers[matcher];
-					var sent2 = Zotero.HTTP.doGet(url2, function (xmlhttp) {
-						try {
-							if (xmlhttp.status != 200) {
-								throw new Error("Unexpected response code " + xmlhttp.status);
-								return;
-							}
-							var data = xmlhttp.responseText;
-							Zotero.debug("receive data: length=" + data.length);
-							var ruleMatcherFolder = getRuleMatcherFolder();
-							Zotero.File.createDirectoryIfMissing(ruleMatcherFolder);
-							var matcherFile = ruleMatcherFolder;
-							var fileName = xmlhttp.responseURL.substring(xmlhttp.responseURL.lastIndexOf("/") + 1, xmlhttp.responseURL.length);
-							matcherFile.append(fileName);
-							Zotero.debug("write data to " + fileName);
-							Zotero.File.putContents(matcherFile, data);
-							Zotero.debug(matcherFile.path + " exists? " + matcherFile.exists() + " at " + Date.now());
-							success = success + 1;
-							Zotero.debug("sucess=" + success + "matchers.size=" + matchers.length);
-							if(success == matchers.length) {
-								sync_matcherSuccess = true;
-								if(sync_jarSuccess && sync_matcherSuccess) {
-									resolve("Success");
-									return;
-								}
-							}
-							}
-						catch (e) {
-							reject("Failed to download: " + xmlhttp.responseURL + "\r\n" + e);
+			getBinFile( url1, Zotero.getZoteroDirectory().path+"\\");
+			});
+	};
+		function downloadRuleMatchers() {
+		//if(!ruleMatcherFile.exists()){
+			return new Promise(function (resolve, reject){
+			var success = 0;
+			var matchers = getRuleMatcherFileNames();
+			for(var matcher in matchers) {
+				var url2 = "http://52.5.78.150/public/fact_extractor/Rule_INPUT/" + matchers[matcher];
+				var sent2 = Zotero.HTTP.doGet(url2, function (xmlhttp) {
+					try {
+						if (xmlhttp.status != 200) {
+							reject("Failed to download: ");
+							throw new Error("Unexpected response code " + xmlhttp.status);
 							return;
 						}
-					});
-				}
+						var data = xmlhttp.responseText;
+						Zotero.debug("receive data: length=" + data.length);
+						var ruleMatcherFolder = getRuleMatcherFolder();
+						Zotero.File.createDirectoryIfMissing(ruleMatcherFolder);
+						var matcherFile = ruleMatcherFolder;
+						var fileName = xmlhttp.responseURL.substring(xmlhttp.responseURL.lastIndexOf("/") + 1, xmlhttp.responseURL.length);
+						matcherFile.append(fileName);
+						Zotero.debug("write data to " + fileName);
+						Zotero.File.putContents(matcherFile, data);
+						Zotero.debug(matcherFile.path + " exists? " + matcherFile.exists() + " at " + Date.now());
+						success = success + 1;
+						Zotero.debug("sucess=" + success + "matchers.size=" + matchers.length);
+						if(success == matchers.length) {
+							sync_matcherSuccess = true;
+								resolve("Success");
+								return;
+						}
+						}
+					catch (e) {
+						reject("Failed to download: " + xmlhttp.responseURL + "\r\n" + e);
+						return;
+					}
+				});
+			}});
+		//	}
 			}
-		});
-		//download.then(
-		//function resolve(response) {return true}, 
-		//function reject(response){Zotero.debug("reject: " + response);} return false);
+		return new Promise(function(resolve, reject) {
+			if(jarFile1.exists()) {
+				sync_jarSuccess = true;
+			}
+			if(ruleMatcherFile.exists()) {
+				sync_matcherSuccess = true;
+			}
+			Zotero.debug("1sync_jarSuccess=" + sync_jarSuccess + " sync_matcherSuccess=" + sync_matcherSuccess);
+			if(sync_jarSuccess && sync_matcherSuccess) {
+				resolve("Success");
+				return;
+			}
+			//var sync_getFileSize = false;
+			
+			if(askIfToDownload) {
+				var whichFiles = 0;
+				if(!jarFile1.exists()) whichFiles = whichFiles + 1;
+				if(!ruleMatcherFile.exists()) whichFiles = whichFiles + 2;//binary bit array: 
+				estimateSpaceRequirement(whichFiles).then(
+				function resolve_esr(fileSize) {
+					var msg;
+					if(fileSize < 1000000) {//less than 1MB
+						var fileSize_KB = fileSize / 1000;
+						fileSize_KB = Math.ceil(fileSize_KB)
+						msg = "Installing Fact Extractor requires approximately " + fileSize_KB + " KB, do you want to proceed?"
+					}else {
+						var fileSize_MB = fileSize / 1000000;
+						fileSize_MB = Math.ceil(fileSize_MB)
+						msg = "Installing Fact Extractor requires approximately " + fileSize_MB + " MB, do you want to proceed?"
+					}
+					var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+					createInstance(Components.interfaces.nsIPromptService);
+					var buttonFlags = (ps.BUTTON_POS_0) * (ps.BUTTON_TITLE_IS_STRING)
+				+ (ps.BUTTON_POS_1) * (ps.BUTTON_TITLE_CANCEL);
+					Zotero.debug("disk space is " + fileSize_MB + " MB");
+					var index = ps.confirm(
+									null,
+									"Fact Extractor NOT Installed",
+									msg
+								);
+					if(!index) {
+						reject("The user uses to cancel");
+						return;
+					}else {
+						if(!sync_matcherSuccess){
+							downloadRuleMatchers().then(function resolve_drm(msg){
+								Zotero.debug("2sync_jarSuccess=" + sync_jarSuccess + " sync_matcherSuccess=" + sync_matcherSuccess);
+								if(sync_jarSuccess && sync_matcherSuccess) {Zotero.debug("I'll resolve"); resolve(msg)};
+							}, function reject_drm(msg){reject(msg)});
+						}
+						if(!sync_jarSuccess) {
+							downloadJar().then(function resolve_dj(msg){if(sync_jarSuccess && sync_matcherSuccess) {resolve(msg);}}, function reject_dj(msg){reject(msg)});
+						}
+					}}, 
+				function reject_esr(msg) {reject(msg);});
+			}else {
+				if(!sync_matcherSuccess){
+							downloadRuleMatchers().then(function resolve_drm(msg){
+								Zotero.debug("2sync_jarSuccess=" + sync_jarSuccess + " sync_matcherSuccess=" + sync_matcherSuccess);
+								if(sync_jarSuccess && sync_matcherSuccess) {resolve(msg)};
+							}, function reject_drm(msg){reject(msg)});
+						}
+						if(!sync_jarSuccess) {
+							downloadJar().then(function resolve_dj(msg){if(sync_jarSuccess && sync_matcherSuccess) {resolve(msg);}}, function reject_dj(msg){reject(msg)});
+						}
+				return;
+			}
+			});
 	};
 	
-	this.canExtract = function(/**Zotero.Item*/ item) {
+	function canExtract(/**Zotero.Item*/ item) {
 		return (item.attachmentMIMEType &&
 			item.attachmentMIMEType == "application/pdf" && !item.getSource());
 	};
@@ -312,7 +400,8 @@ var Zotero_extractFacts = new function() {
 			checkFactsOwnership(file, te, userName, fileHash, getAndSendFactsData);
 		});
 	};
-	this.extractAndsend = function(file, checkSetting) {
+	this.extractAndsend = extractAndsend;
+	function extractAndsend (file, checkSetting, askIfToDownload) {
 		Zotero.debug("Entering Zotero.extractFacts.extractAndsend");
 		if(checkSetting) {
 			var cb = document.getElementById("zotero-cb-extract-facts");
@@ -337,7 +426,7 @@ var Zotero_extractFacts = new function() {
 			}
 		});
 			
-		this.checkAndDownload().then(function resolve(response) {
+		checkAndDownload(askIfToDownload).then(function resolve(response) {
 		try{	
 			sync_downloads = true;
 			Zotero.debug("after checkAndDownload(): sync_username=" + sync_username + "; sync_downloads=" + sync_downloads);
@@ -364,10 +453,14 @@ var Zotero_extractFacts = new function() {
 		});
 	};
 	
-	this.extractFactsSelected = function() {
-		Zotero.debug("Entering fact extraction");
+	this.startExtractAndSend = startExtractAndSend;
+	function startExtractAndSend(askIfToDownload) {
+		Zotero.debug("Entering startExtractAndSend");
 		var items = ZoteroPane_Local.getSelectedItems();
-		if (!items) return;
+		if (!items) {
+			Zotero.debug("No item is selected.");
+			return;
+		} 
 		this._items = [];
 		this._items = items.slice();
 		var nonpdfs = 0;
@@ -376,30 +469,75 @@ var Zotero_extractFacts = new function() {
 			if(!this._items.length) break;
 			var item = this._items.shift();
 			total = total + 1;
-			if(this.canExtract(item)) {
+			if(canExtract(item)) {
 				var file = item.getFile();
 				Zotero.debug("Target file: " + file.path);
-				this.extractAndsend(file, false);
+				extractAndsend(file, false, askIfToDownload);
 			}else {
 				nonpdfs = nonpdfs + 1;
 				Zotero.debug("A non-pdf is selected to extract facts.");
 			}
 		}
-		var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-										.getService(Components.interfaces.nsIPromptService);
+		var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+				createInstance(Components.interfaces.nsIPromptService);
 		if(nonpdfs != 0 && nonpdfs == total) {	
 			ps.alert(
 			null,
 			" ",
 			"None of the selected files are PDF files. No facts are extracted!"
 			);
-		}else {
+		}
+		else {
+			var msg;
+			if(total - nonpdfs > 1) msg = "Facts of " + (total - nonpdfs) + " PDF files are being extracted in background.";
+			else msg = "Facts of " + (total - nonpdfs) + " PDF file is being extracted in background."
 			ps.alert(
 			null,
 			" ",
-			"Facts of " + (total - nonpdfs) + " PDF files are being extracted in background."
+			msg
 			);
 		}
-	};	
+	};
+	
+	this.extractFactsSelected = function() {
+		var jarFile1 = getJar();
+		var ruleMatcherFile = getRuleMatcher();
+		var whichFiles = 0;
+		if(!jarFile1.exists()) {
+			whichFiles = whichFiles + 1;
+		}
+		if(!ruleMatcherFile.exists()) {
+			whichFiles = whichFiles + 2;//binary bit array:
+		}
+		if(whichFiles > 0) {
+			estimateSpaceRequirement(whichFiles).then(function resolve(fileSize){
+				var msg;
+				if(fileSize < 1000000) {//less than 1MB
+					var fileSize_KB = fileSize / 1000;
+					fileSize_KB = Math.ceil(fileSize_KB)
+					msg = "Installing Fact Extractor requires approximately " + fileSize_KB + " KB, do you want to proceed?"
+				}else {
+					var fileSize_MB = fileSize / 1000000;
+					fileSize_MB = Math.ceil(fileSize_MB)
+					msg = "Installing Fact Extractor requires approximately " + fileSize_MB + " MB, do you want to proceed?"
+				}
+				var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+				createInstance(Components.interfaces.nsIPromptService);
+				Zotero.debug("disk space is " + fileSize_MB + " MB");
+				var index = ps.confirm(
+					null,
+					"Fact Extractor NOT Installed",
+					msg
+				);
+				if(!index) {
+					return; 
+				}
+				else {
+					startExtractAndSend(false);
+				}}, function reject(fileSize){Zotero.debug("Exit extractFactsSelected with msg " + fileSize)});
+		}else {
+			startExtractAndSend(false);
+		}
+	};
 };
 Zotero.extractFacts = Zotero_extractFacts;
