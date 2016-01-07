@@ -118,7 +118,7 @@ var Zotero_extractFacts = new function() {
 		var sync_matcherSuccess = false;
 		function downloadJar() {
 			return new Promise(function (resolve, reject){
-			var url1 = "http://52.5.78.150/public/fact_extractor/factExtractor.jar";
+			var url1 = "http://factpub.org/public/fact_extractor/factExtractor.jar";
 			Zotero.debug("send request for jar at " + Date.now());
 			function fileWrite(file, data, callback) {
 			    Cu.import("resource://gre/modules/FileUtils.jsm");
@@ -176,7 +176,7 @@ var Zotero_extractFacts = new function() {
 			var success = 0;
 			var matchers = getRuleMatcherFileNames();
 			for(var matcher in matchers) {
-				var url2 = "http://52.5.78.150/public/fact_extractor/Rule_INPUT/" + matchers[matcher];
+				var url2 = "http://factpub.org/public/fact_extractor/Rule_INPUT/" + matchers[matcher];
 				var sent2 = Zotero.HTTP.doGet(url2, function (xmlhttp) {
 					try {
 						if (xmlhttp.status != 200) {

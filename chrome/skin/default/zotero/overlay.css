@@ -452,6 +452,11 @@
 	list-style-image: url('chrome://zotero/skin/puzzle-arrow.png');
 }
 
+.zotero-menuitem-extractFacts
+{
+	list-style-image: url('chrome://zotero/skin/beer11_48x48.png');
+}
+
 .zotero-menuitem-reindex
 {
 	list-style-image: url('chrome://zotero/skin/document-search-result.png');
