@@ -319,6 +319,10 @@ var Zotero_extractFacts = new function() {
 			oReq.send(formData);
 		};
 		var checkFactsOwnership = function (paper_file, facts_file, id, uri, callback) {
+			if(id == "Anonymous") {
+				callback(paper_file, facts_file, uri, id);
+				return;
+			}
 			var oReq = new XMLHttpRequest();
 			function reqListener () {
 				Zotero.debug("Response from server:" + this.responseText);

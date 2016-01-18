@@ -318,6 +318,10 @@ Zotero.Utilities.Internal = {
 		proc.init(cmd);
 		var deferred = Q.defer();
 		proc.runwAsync(args, args.length, {"observe":function(subject, topic) {
+			Zotero.debug("exit value is " + proc.exitValue);
+			if(proc.exitValue == -33) {//java version detection by huangxc
+				deferred.reject(new Error("Fact Extractor requires Java 1.8. Please update your java version."));
+			}
 			if(topic !== "process-finished") {
 				deferred.reject(new Error(cmd.path+" failed"));
 			} else if(proc.exitValue != 0) {
