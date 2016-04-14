@@ -502,8 +502,100 @@ var Zotero_extractFacts = new function() {
 			);
 		}
 	};
-	
+	/**For testing nlp_compromise only **/
+	this.parseXMLAndProcess = parseXMLAndProcess;
+	function parseXMLAndProcess() {
+		nlp = window.nlp_compromise; // or
+		var papername = "cbdgmlu_text_withoutspace.xml";
+		var xmlpaper = Zotero.getZoteroDirectory();
+		xmlpaper.append(papername);
+		var txt = Zotero.File.getContents(xmlpaper);
+		//txt = txt.replace(/\n/g," ");
+		//var txt = "<root>lala<p>para</p><p>para2</p></root>";
+		var start = new Date().getTime();
+		var parser;
+		var xmlDoc;
+		if (window.DOMParser)
+		{
+			parser = new DOMParser();
+			xmlDoc = parser.parseFromString(txt, "text/xml");
+		}
+		else // Internet Explorer
+		{
+			xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+			xmlDoc.async = false;
+			xmlDoc.loadXML(txt);
+		}
+		var paras = xmlDoc.getElementsByTagName("p");
+		var output = "";
+		for (var i = 0; i < paras.length; i++) { //cannot user for each loop, no idea why. for each(var para in paras) {
+			var para = paras[i];
+			//Zotero.debug(para.childNodes[0].nodeValue);
+			//if(para.childNodes.)
+			var sentences = nlp.text(para.childNodes[0].nodeValue).sentences;//sentence detector
+			for each(var sentence in sentences) {
+				output = output + "**" + sentence.text() + "**\n";
+				var parseResult = nlp.text(sentence.text());
+				var terms = parseResult.terms();
+				var st = "++\t";
+				for each(var term in terms) {
+					st = st + term.root()+ "\t";
+				}
+				st = st + "++";
+				output = output + st + "\n";
+				st = "--\t";
+				var tags = parseResult.tags();//one string with ,
+				var tmp = "" + tags;
+				tmp = tmp.replace(/,/g,"\t");
+				
+				st = st + tmp + "--";
+				output = output + st + "\n\n";
+			}
+			output = output + "-----------------------------------\n\n";
+		}
+		var end = new Date().getTime();
+		Zotero.debug("time costs: " + (end - start));
+		{
+			var outputfile = Zotero.getZoteroDirectory();
+			outputfile.append("nlp_" +papername);
+			Zotero.File.putContents(outputfile, output);
+		}
+		//Zotero.debug("HERE:" + xmlDoc.getElementsByTagName("p")[0].childNodes[0].nodeValue);
+	}
 	this.extractFactsSelected = function() {
+		/*{//test knwl.js
+		require(['knwl.js'], function (Knwl) {
+			Zotero.debug("yes");
+			var knwlInstance = new Knwl('engish');
+			knwlInstance.init("This is a string. This was written on the 2nd of June, of 2015.");
+			var dates = knwlInstance.get('dates');
+			Zotero.debug(dates);
+		});
+		return;
+			
+		}*/
+		{//test
+			parseXMLAndProcess();
+			return;
+			var start = new Date().getTime();
+			nlp = window.nlp_compromise; // or
+			//Both diphenhydramine and desloratadine+verapamil treated animals performed significantly less well on the rotarod than the MC treated animals (p<0.0001)
+			var result = nlp.text("The rate grows by 2.1 percent. The rate grows by 2.1 percent.The rate grows by 2.1 percent.The rate grows by 2.1 percent.The rate grows by 2.1 percent.The rate grows by 2.1 percent.").sentences;//sentence detector
+			Zotero.debug("rest: " + result[0].text() + " !!!  " + result[1].text() );
+			var terms = nlp.text(result[0].text()).terms();
+			for each(var term in terms) {
+				Zotero.debug("**"  +term.root()+ "**" + term.normalize() + "**");
+			}
+			
+			var tags = nlp.text(result[0].text()).tags();
+			for each(var term in tags) {
+				Zotero.debug("++"  +term+ "**");
+			}
+			var end = new Date().getTime();
+			Zotero.debug("time costs: " + (end - start));
+			return;
+			
+		}
 		var jarFile1 = getJar();
 		var ruleMatcherFile = getRuleMatcher();
 		var whichFiles = 0;
