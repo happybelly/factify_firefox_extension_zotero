@@ -562,6 +562,50 @@ var Zotero_extractFacts = new function() {
 		}
 		//Zotero.debug("HERE:" + xmlDoc.getElementsByTagName("p")[0].childNodes[0].nodeValue);
 	}
+	/**For testing jspos only **/
+	this.parseXMLAndProcess_jspos = parseXMLAndProcess_jspos;
+	function parseXMLAndProcess_jspos() {
+		var papername = "cbdgmlu_text_withoutspace.xml";
+		var xmlpaper = Zotero.getZoteroDirectory();
+		xmlpaper.append(papername);
+		var txt = Zotero.File.getContents(xmlpaper);
+		var start = new Date().getTime();
+		var parser;
+		var xmlDoc;
+		if (window.DOMParser)
+		{
+			parser = new DOMParser();
+			xmlDoc = parser.parseFromString(txt, "text/xml");
+		}
+		else // Internet Explorer
+		{
+			xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+			xmlDoc.async = false;
+			xmlDoc.loadXML(txt);
+		}
+		var paras = xmlDoc.getElementsByTagName("p");
+		var output = "";
+		for (var i = 0; i < paras.length; i++) { //cannot user for each loop, no idea why. for each(var para in paras) {
+			var para = paras[i];
+			var words = new Lexer().lex(para.childNodes[0].nodeValue);
+			var taggedWords = new POSTagger().tag(words);
+			for (j in taggedWords) {
+			    var taggedWord = taggedWords[j];
+			    var word = taggedWord[0];
+			    var tag = taggedWord[1];
+				output = output + taggedWord + "\t";
+			}
+			output = output + "-----------------------------------\n\n";
+		}
+		var end = new Date().getTime();
+		Zotero.debug("time costs: " + (end - start));
+		{
+			var outputfile = Zotero.getZoteroDirectory();
+			outputfile.append("jspos_" +papername);
+			Zotero.File.putContents(outputfile, output);
+		}
+		//Zotero.debug("HERE:" + xmlDoc.getElementsByTagName("p")[0].childNodes[0].nodeValue);
+	}
 	this.extractFactsSelected = function() {
 		/*{//test knwl.js
 		require(['knwl.js'], function (Knwl) {
@@ -574,8 +618,21 @@ var Zotero_extractFacts = new function() {
 		return;
 			
 		}*/
-		{//test
-			parseXMLAndProcess();
+		{//test jspos
+			parseXMLAndProcess_jspos();
+			return;
+			var words = new Lexer().lex("The rate grows by 2.1 percent. Profits are topping all estimates.");
+			var taggedWords = new POSTagger().tag(words);
+			for (i in taggedWords) {
+			    var taggedWord = taggedWords[i];
+			    var word = taggedWord[0];
+			    var tag = taggedWord[1];
+				Zotero.debug(taggedWord + "\t" + word + "\t" + tag);
+			}
+			return;
+		}
+		{//test nlp_compromise
+			//parseXMLAndProcess();
 			return;
 			var start = new Date().getTime();
 			nlp = window.nlp_compromise; // or
