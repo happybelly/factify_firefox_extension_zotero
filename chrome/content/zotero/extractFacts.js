@@ -618,6 +618,12 @@ var Zotero_extractFacts = new function() {
 		return;
 			
 		}*/
+		{//test porter's stemmer
+			Zotero.debug(stemmer("hopes"));
+			Zotero.debug(stemmer("tested"));
+			Zotero.debug(stemmer("apples"));
+			return;
+		}
 		{//test jspos
 			parseXMLAndProcess_jspos();
 			return;

@@ -50,7 +50,8 @@
 	<script src="lexicon.js_"></script>
 	<script src="lexer.js"></script>
 	<script src="POSTagger.js"></script>
-	<script src="nlp_compromise.min.js"></script>
+	<!-- <script src="nlp_compromise.min.js"></script> -->
+	<script src="PorterStemmer2.min.js"></script>
 	<script src="extractFacts.js"/>
 	
 	<commandset id="mainCommandSet">
