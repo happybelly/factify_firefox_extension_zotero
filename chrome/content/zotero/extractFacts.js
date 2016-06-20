@@ -77,7 +77,7 @@ var Zotero_extractFacts = new function() {
 	
 	function estimateSpaceRequirement (whichFiles) {
 		return new Promise(function (resolve, reject) {
-			var url = "http://52.5.78.150:8080/getSize?whichFiles=" + whichFiles;
+			var url = "http://factpub.org:8080/getSize?whichFiles=" + whichFiles;
 			var oReq = new XMLHttpRequest();
 			function reqListener () {
 					Zotero.debug("In estimateSpaceRequirement, Response from server:" + this.responseText);
@@ -118,8 +118,8 @@ var Zotero_extractFacts = new function() {
 		var sync_matcherSuccess = false;
 		function downloadJar() {
 			return new Promise(function (resolve, reject){
-			var url1 = "http://factpub.org/public/fact_extractor/factExtractor.jar";
-			Zotero.debug("send request for jar at " + Date.now());
+			var url1 = "http://factpub.org/public/factify/factExtractor.jar";
+			Zotero.debug("send request for jar at " + Date.now() + " ");
 			function fileWrite(file, data, callback) {
 			    Cu.import("resource://gre/modules/FileUtils.jsm");
 			    Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -176,7 +176,7 @@ var Zotero_extractFacts = new function() {
 			var success = 0;
 			var matchers = getRuleMatcherFileNames();
 			for(var matcher in matchers) {
-				var url2 = "http://factpub.org/public/fact_extractor/Rule_INPUT/" + matchers[matcher];
+				var url2 = "http://factpub.org/public/factify/Rule_INPUT/" + matchers[matcher];
 				var sent2 = Zotero.HTTP.doGet(url2, function (xmlhttp) {
 					try {
 						if (xmlhttp.status != 200) {
@@ -310,7 +310,7 @@ var Zotero_extractFacts = new function() {
 					Zotero.debug("Done loading %o, response is %s", oEvent, oReq.responseText);
 			};
 			var content= data;
-			var url = "http://52.5.78.150:8080/upload?uri=" + uri + "&id=" + id;
+			var url = "http://factpub.org:8080/upload?uri=" + uri + "&id=" + id;
 			Zotero.debug("sending httprequest:" + url);
 			var dataBlob = new Blob([content], { type: "text/html" });
 			var formData = new FormData();
@@ -318,6 +318,7 @@ var Zotero_extractFacts = new function() {
 			oReq.open("POST", url);
 			oReq.send(formData);
 		};
+		/*
 		var checkFactsOwnership = function (paper_file, facts_file, id, uri, callback) {
 			if(id == "Anonymous") {
 				callback(paper_file, facts_file, uri, id);
@@ -347,11 +348,12 @@ var Zotero_extractFacts = new function() {
 			oReq.onload = function (oEvent) {
 					Zotero.debug("Done loading %o, response is %s", oEvent, oReq.responseText);
 			};
-			var url = "http://52.5.78.150:8080/exist?uri=" + uri + "&id=" + id;
+			var url = "http://factpub.org:8080/exist?uri=" + uri + "&id=" + id;
 			Zotero.debug("sending httprequest:" + url);
 			oReq.open("GET", url);
 			oReq.send();
-		}
+		};
+		*/
 		
 		var getAndSendFactsData = function (paper_file, facts_file, uri, id) {
 			//var te = Zotero.getZoteroFactsDirectory();//facts file 
@@ -401,7 +403,8 @@ var Zotero_extractFacts = new function() {
 			Zotero.debug("hash of " + file.path + " is " + fileHash);
 			var te = Zotero.getZoteroFactsDirectory();//facts file 
 			te.append(fileHash + "_facts.json");
-			checkFactsOwnership(file, te, userName, fileHash, getAndSendFactsData);
+//			checkFactsOwnership(file, te, userName, fileHash, getAndSendFactsData);
+			getAndSendFactsData(file, te,fileHash, userName);
 		});
 	};
 	this.extractAndsend = extractAndsend;
